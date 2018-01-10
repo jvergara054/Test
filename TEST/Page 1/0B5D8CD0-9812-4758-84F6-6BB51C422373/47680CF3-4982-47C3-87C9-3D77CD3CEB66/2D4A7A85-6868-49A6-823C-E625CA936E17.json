@@ -2,7 +2,7 @@
   "_class": "rectangle",
   "booleanOperation": -1,
   "do_objectID": "2D4A7A85-6868-49A6-823C-E625CA936E17",
-  "edited": false,
+  "edited": true,
   "exportOptions": {
     "_class": "exportOptions",
     "exportFormats": [
@@ -47,12 +47,12 @@
       {
         "_class": "curvePoint",
         "cornerRadius": 0,
-        "curveFrom": "{1, 0}",
+        "curveFrom": "{0.20845170454545456, 0.70221166816546765}",
         "curveMode": 1,
-        "curveTo": "{1, 0}",
+        "curveTo": "{0.20845170454545456, 0.70221166816546765}",
         "hasCurveFrom": false,
         "hasCurveTo": false,
-        "point": "{1, 0}"
+        "point": "{0.20845170454545456, 0.70221166816546765}"
       },
       {
         "_class": "curvePoint",
