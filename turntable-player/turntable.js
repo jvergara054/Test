@@ -15,7 +15,7 @@
   const CONFIG = {
     // Put your playlist link here to make it the default, e.g.
     // 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'
-    playlist: '',
+    playlist: 'https://open.spotify.com/playlist/5uEW8SUsj1IxND6UVWnyDQ',
     embedHeight: 152,
   };
 
