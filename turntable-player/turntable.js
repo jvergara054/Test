@@ -1,22 +1,20 @@
 /* ==========================================================================
    Turntable player
    --------------------------------------------------------------------------
-   Drives the SVG drawing in index.html and controls a Spotify embed through
-   the Spotify iFrame API. No login or API keys needed.
+   Drives the SVG drawing and plays a Spotify playlist through the Spotify
+   iFrame API, which needs no login or API keys. The Spotify player stays
+   hidden. The turntable shows only what's playing: the song's cover art
+   spins on the record label, and the strip under the deck shows the title
+   and progress.
 
-   Playlist source, in priority order:
-     1. ?playlist=<spotify link | uri | id> in the page URL
-     2. the last playlist pasted into the form (kept in localStorage)
-     3. CONFIG.playlist below
+   Playlist: ?playlist=<link | uri | id> in the URL, otherwise CONFIG.playlist.
    ========================================================================== */
 (() => {
   'use strict';
 
   const CONFIG = {
-    // Put your playlist link here to make it the default, e.g.
-    // 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'
     playlist: 'https://open.spotify.com/playlist/5uEW8SUsj1IxND6UVWnyDQ',
-    embedHeight: 152,
+    fallbackTitle: 'Sunday Drv',
   };
 
   /* ---------- geometry (must match index.html) ---------- */
@@ -26,9 +24,12 @@
   const REST = 6;                  // arm angle on the rest, degrees
   const R_OUT = 266;               // lead-in groove radius
   const R_IN = 106;                // run-out groove radius
+  const VIEW_FULL = '-90 -70 1240 900';
+  const VIEW_COMPACT = '26 16 948 718';
 
   const $ = (s) => document.querySelector(s);
   const svg = $('#tt');
+  const deck = $('#deck');
   const els = {
     platterRot: $('#platter-rot'),
     arm: $('#arm'),
@@ -36,27 +37,29 @@
     sweep: $('#sweep'),
     sweepProgress: $('#sweep-progress'),
     start: $('#btn-start'),
+    startLabel: $('#btn-start .ctl__label'),
     b33: $('#btn-33'),
     b45: $('#btn-45'),
     knob: $('#pitch-knob'),
     hit: $('#platter-hit'),
-    status: $('#status'),
-    time: $('#time'),
-    dur: $('#dur'),
-    rpm: $('#rpm'),
-    pitchVal: $('#pitch-val'),
-    src: $('#src'),
+    labelDefault: $('#label-default'),
+    labelArt: $('#label-art'),
+    labelImg: $('#label-img'),
+    npState: $('#np-state'),
+    npTitle: $('#np-title'),
+    npSub: $('#np-sub'),
+    npTime: $('#np-time'),
+    npCover: $('#np-cover'),
+    npLink: $('#np-link'),
+    npBar: $('#np-bar'),
+    dock: $('#spotify-dock'),
     host: $('#spotify-host'),
-    empty: $('#spotify-empty'),
-    form: $('#playlist-form'),
-    input: $('#playlist-input'),
-    hint: $('#hint'),
   };
 
   /* ---------- grooves ---------- */
   (function drawGrooves() {
     const NS = 'http://www.w3.org/2000/svg';
-    const gaps = [228, 186, 150];           // track bands
+    const gaps = [228, 186, 150];
     const frag = document.createDocumentFragment();
     for (let r = R_OUT + 2; r >= R_IN - 2; r -= 2.4) {
       const c = document.createElementNS(NS, 'circle');
@@ -66,18 +69,27 @@
       c.setAttribute('r', r.toFixed(1));
       c.setAttribute('class', 'groove');
       c.setAttribute('stroke-width', nearGap ? '1.4' : '0.45');
-      c.setAttribute('opacity', nearGap ? '0.55' : (0.16 + 0.12 * Math.sin(r * 0.9)).toFixed(2));
+      c.setAttribute('opacity', nearGap ? '0.55' : (0.14 + 0.1 * Math.sin(r * 0.9)).toFixed(2));
       frag.appendChild(c);
     }
     els.grooves.appendChild(frag);
   })();
 
+  /* ---------- responsive crop ---------- */
+  function fit() {
+    const compact = deck.clientWidth < 640;
+    svg.classList.toggle('is-compact', compact);
+    svg.setAttribute('viewBox', compact ? VIEW_COMPACT : VIEW_FULL);
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(deck);
+  else window.addEventListener('resize', fit);
+  fit();
+
   /* ---------- tonearm maths ---------- */
   const rad = (d) => (d * Math.PI) / 180;
   const stylusAt = (deg) => ({ x: P.x - L * Math.sin(rad(deg)), y: P.y + L * Math.cos(rad(deg)) });
   const distToC = (pt) => Math.hypot(pt.x - C.x, pt.y - C.y);
-  // closest approach to the spindle is where the arm points straight at it
-  const TH_MAX = (Math.atan2(-(C.x - P.x), C.y - P.y) * 180) / Math.PI;
+  const TH_MAX = (Math.atan2(-(C.x - P.x), C.y - P.y) * 180) / Math.PI; // arm pointing at spindle
 
   function angleForRadius(r) {
     let lo = REST, hi = TH_MAX;
@@ -92,8 +104,7 @@
 
   function arcPath(a0, a1) {
     const s = stylusAt(a0), e = stylusAt(a1);
-    const large = Math.abs(a1 - a0) > 180 ? 1 : 0;
-    return `M${s.x.toFixed(2)},${s.y.toFixed(2)} A${L},${L} 0 ${large} 1 ${e.x.toFixed(2)},${e.y.toFixed(2)}`;
+    return `M${s.x.toFixed(2)},${s.y.toFixed(2)} A${L},${L} 0 0 1 ${e.x.toFixed(2)},${e.y.toFixed(2)}`;
   }
   els.sweep.setAttribute('d', arcPath(TH_OUT, TH_IN));
 
@@ -101,17 +112,20 @@
   const state = {
     playing: false,
     buffering: false,
-    position: 0,         // ms, at posStamp
-    duration: 0,         // ms
+    position: 0,
+    duration: 0,
     posStamp: performance.now(),
     rpm: 100 / 3,
-    pitch: 0,            // percent
-    controller: null,
+    pitch: 0,
     api: null,
+    controller: null,
     uri: '',
-    pendingToggle: 0,
+    playlist: null,      // { title, image, url }
+    track: null,         // { title, image, url }
+    trackUri: '',
+    wantPlay: false,     // pressed start before the player was ready
+    connectTimer: 0,
   };
-
   const DEMO_DURATION = 3 * 60 * 1000;
 
   function livePosition() {
@@ -120,21 +134,75 @@
     return Math.min(p, state.duration);
   }
 
+  /* ---------- Spotify metadata (public oEmbed endpoint, no auth) ---------- */
+  const metaCache = new Map();
+  function uriToUrl(uri) {
+    const [, type, id] = uri.split(':');
+    return `https://open.spotify.com/${type}/${id}`;
+  }
+  function fetchMeta(uri) {
+    if (!metaCache.has(uri)) {
+      const url = uriToUrl(uri);
+      metaCache.set(uri, fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => (j ? { title: j.title || '', image: j.thumbnail_url || '', url } : { title: '', image: '', url }))
+        .catch(() => ({ title: '', image: '', url })));
+    }
+    return metaCache.get(uri);
+  }
+
+  function setArtwork(src) {
+    if (src) {
+      els.labelImg.setAttribute('href', src);
+      els.labelArt.removeAttribute('hidden');
+      els.labelDefault.setAttribute('hidden', '');
+      els.npCover.src = src;
+      els.npCover.hidden = false;
+    } else {
+      els.labelArt.setAttribute('hidden', '');
+      els.labelDefault.removeAttribute('hidden');
+      els.npCover.hidden = true;
+    }
+  }
+
+  function showMeta() {
+    const t = state.track, p = state.playlist;
+    els.npTitle.textContent = (t && t.title) || (p && p.title) || CONFIG.fallbackTitle;
+    els.npSub.textContent = p && p.title && t && t.title ? p.title : state.uri ? 'Spotify playlist' : 'Demo, no audio';
+    setArtwork((t && t.image) || (p && p.image) || '');
+    els.npLink.href = (t && t.url) || (p && p.url) || 'https://open.spotify.com';
+  }
+
+  async function onTrackChange(uri) {
+    state.trackUri = uri;
+    const m = await fetchMeta(uri);
+    if (state.trackUri !== uri) return;      // skipped again meanwhile
+    state.track = m;
+    showMeta();
+  }
+
   /* ---------- playback control ---------- */
+  function openDock(open) {
+    els.dock.classList.toggle('is-open', open);
+  }
+
   function toggle() {
     if (state.controller) {
       state.controller.togglePlay();
-      // Some browsers only allow audio after a click inside the Spotify frame.
       const before = state.playing;
-      clearTimeout(state.pendingToggle);
-      state.pendingToggle = setTimeout(() => {
-        if (state.playing === before && !before) {
-          hint('If nothing plays, press play once in the Spotify player. After that the deck controls it.');
-        }
+      clearTimeout(state.connectTimer);
+      // Some browsers (iOS Safari) only allow audio after a tap inside the Spotify frame.
+      state.connectTimer = setTimeout(() => {
+        if (!before && !state.playing) openDock(true);
       }, 1800);
       return;
     }
-    // demo mode: no audio
+    if (state.uri) {                          // player still loading
+      state.wantPlay = !state.wantPlay;
+      render();
+      return;
+    }
+    // demo mode
     state.position = livePosition();
     state.posStamp = performance.now();
     if (!state.duration) state.duration = DEMO_DURATION;
@@ -149,7 +217,6 @@
     els.b45.classList.toggle('is-active', is45);
     els.b33.setAttribute('aria-pressed', String(!is45));
     els.b45.setAttribute('aria-pressed', String(is45));
-    render();
   }
 
   /* ---------- pitch slider ---------- */
@@ -159,7 +226,6 @@
     const dy = (-state.pitch / 8) * (PITCH_MID - PITCH_Y0);
     els.knob.setAttribute('transform', `translate(0 ${dy.toFixed(2)})`);
     els.knob.setAttribute('aria-valuenow', String(state.pitch));
-    render();
   }
   function svgPoint(evt) {
     const pt = svg.createSVGPoint();
@@ -205,8 +271,7 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || e.repeat) return;
-    const t = e.target;
-    if (t && (t.closest('input, textarea, button, [role="button"], [role="slider"]'))) return;
+    if (e.target && e.target.closest && e.target.closest('input, textarea, button, a, [role="button"], [role="slider"]')) return;
     e.preventDefault();
     toggle();
   });
@@ -214,19 +279,19 @@
   /* ---------- readouts ---------- */
   const fmt = (ms) => {
     const s = Math.max(0, Math.floor(ms / 1000));
-    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   };
-  function hint(msg) { els.hint.textContent = msg || ''; }
 
   function render() {
     const lifted = !state.playing && state.duration > 0 && livePosition() > 0;
-    svg.classList.toggle('is-playing', state.playing);
+    for (const el of [svg, deck]) el.classList.toggle('is-playing', state.playing);
     svg.classList.toggle('is-lifted', lifted);
-    els.status.textContent = state.buffering ? 'Cueing' : state.playing ? 'Playing' : lifted ? 'Paused · cued' : 'Standby';
-    els.dur.textContent = state.duration ? fmt(state.duration) : '--:--';
-    els.rpm.textContent = state.rpm === 45 ? '45' : '33⅓';
-    els.pitchVal.textContent = (state.pitch > 0 ? '+' : state.pitch < 0 ? '−' : '±') + Math.abs(state.pitch).toFixed(1);
-    els.src.textContent = state.uri ? state.uri : 'Demo (no audio)';
+    els.startLabel.textContent = state.playing ? 'STOP' : 'START';
+    els.npState.textContent =
+      state.buffering || (state.wantPlay && !state.controller) ? 'Cueing…'
+      : state.playing ? 'Now playing'
+      : lifted ? 'Paused'
+      : 'Standby';
   }
 
   /* ---------- animation loop ---------- */
@@ -238,16 +303,13 @@
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    // platter: eases up to speed, coasts down
     const target = state.playing ? state.rpm * 6 * (1 + state.pitch / 100) : 0; // deg/s
-    const k = state.playing ? 2.4 : 1.1;
-    omega += (target - omega) * (1 - Math.exp(-k * dt));
+    omega += (target - omega) * (1 - Math.exp(-(state.playing ? 2.4 : 1.1) * dt));
     if (!reduceMotion) {
       rot = (rot + omega * dt) % 360;
       els.platterRot.setAttribute('transform', `rotate(${rot.toFixed(3)} ${C.x} ${C.y})`);
     }
 
-    // arm: follows track progress; stays cued while paused; parks on stop
     const pos = livePosition();
     const progress = state.duration ? pos / state.duration : 0;
     const onRecord = state.playing || (state.duration > 0 && pos > 0);
@@ -256,18 +318,17 @@
     els.arm.setAttribute('transform', `rotate(${armAngle.toFixed(3)} ${P.x} ${P.y})`);
 
     els.sweepProgress.setAttribute('d', onRecord && progress > 0.001 ? arcPath(TH_OUT, TH_OUT + (TH_IN - TH_OUT) * progress) : '');
-    els.time.textContent = fmt(pos);
+    els.npTime.textContent = state.duration ? `${fmt(pos)} / ${fmt(state.duration)}` : '';
+    els.npBar.style.width = `${(progress * 100).toFixed(2)}%`;
 
-    // demo mode loops the fake track
-    if (!state.controller && state.playing && pos >= state.duration) {
-      state.position = 0;
+    if (!state.controller && !state.uri && state.playing && pos >= state.duration) {
+      state.position = 0;               // demo loops
       state.posStamp = now;
     }
-
     requestAnimationFrame(frame);
   }
 
-  /* ---------- Spotify ---------- */
+  /* ---------- Spotify player ---------- */
   function toUri(input) {
     const s = String(input || '').trim();
     if (!s) return '';
@@ -276,65 +337,44 @@
     m = s.match(/^spotify:(playlist|album|track|episode|show|artist):([A-Za-z0-9]+)$/i);
     if (m) return `spotify:${m[1].toLowerCase()}:${m[2]}`;
     if (/^[A-Za-z0-9]{22}$/.test(s)) return `spotify:playlist:${s}`;
-    return null;
+    return '';
   }
 
-  const store = {
-    get() { try { return localStorage.getItem('sd-turntable-playlist') || ''; } catch { return ''; } },
-    set(v) { try { localStorage.setItem('sd-turntable-playlist', v); } catch { /* ignore */ } },
-  };
-
-  function mount(uri) {
-    state.uri = uri;
-    render();
-    if (!state.api) return; // mounted once the API script reports ready
-    if (state.controller) { state.controller.loadUri(uri); return; }
-
-    els.empty.hidden = true;
+  function mount() {
+    if (!state.api || !state.uri || state.controller) return;
     const slot = document.createElement('div');
     els.host.appendChild(slot);
-    state.api.createController(slot, { uri, width: '100%', height: CONFIG.embedHeight }, (controller) => {
+    state.api.createController(slot, { uri: state.uri, width: '100%', height: 152 }, (controller) => {
       state.controller = controller;
-      // leaving demo mode: reset the deck
-      state.playing = false;
-      state.position = 0;
-      state.duration = 0;
-      render();
-
       controller.addListener('playback_update', (e) => {
         const d = e.data || {};
-        const wasPlaying = state.playing;
         state.playing = !d.isPaused;
         state.buffering = !!d.isBuffering;
         state.duration = d.duration || 0;
         state.position = d.position || 0;
         state.posStamp = performance.now();
-        if (state.playing !== wasPlaying) { clearTimeout(state.pendingToggle); hint(''); }
+        if (state.playing) { clearTimeout(state.connectTimer); openDock(false); }
+        const playing = d.playingURI || d.playingUri || '';
+        if (playing && playing !== state.trackUri) onTrackChange(playing);
         render();
+      });
+      controller.addListener('ready', () => {
+        if (state.wantPlay) { state.wantPlay = false; toggle(); }
       });
     });
   }
 
   window.onSpotifyIframeApiReady = (IFrameAPI) => {
     state.api = IFrameAPI;
-    if (state.uri) mount(state.uri);
+    mount();
   };
 
-  els.form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const uri = toUri(els.input.value);
-    if (uri === null) { hint('That doesn’t look like a Spotify link. Paste the link from Share › Copy link.'); return; }
-    if (!uri) return;
-    hint('');
-    store.set(uri);
-    mount(uri);
-  });
-
   /* ---------- boot ---------- */
-  const fromQuery = toUri(new URLSearchParams(location.search).get('playlist'));
-  const initial = fromQuery || store.get() || toUri(CONFIG.playlist) || '';
-  if (initial) { els.input.value = initial; mount(initial); }
-
+  state.uri = toUri(new URLSearchParams(location.search).get('playlist')) || toUri(CONFIG.playlist);
+  if (state.uri) {
+    fetchMeta(state.uri).then((m) => { state.playlist = m; showMeta(); });
+  }
+  showMeta();
   setPitch(0);
   render();
   requestAnimationFrame(frame);
