@@ -1,55 +1,48 @@
 # Turntable player
 
-A top-down technical drawing of a turntable that plays a Spotify playlist.
-It is plain HTML, CSS and JS with no build step.
+A top-down technical drawing of a turntable, styled for sundaydrv.com, that plays the Sunday Drv Spotify playlist.
+The Spotify player is hidden. The deck shows only what's playing: the song's cover art spins on the record label, and the strip underneath shows the title and progress.
 
 ![preview](preview.png)
 
-## Run it
+_The preview uses a placeholder song and cover art._
 
-Open `index.html` in a browser, or serve the folder:
+Live: https://jvergara054.github.io/Test/turntable-player/
 
-```sh
-cd turntable-player && python3 -m http.server 8000
-# → http://localhost:8000/?playlist=https://open.spotify.com/playlist/<id>
+## Put it on sundaydrv.com
+
+Paste this into an Embed / Custom HTML block on the site:
+
+```html
+<iframe
+  src="https://jvergara054.github.io/Test/turntable-player/"
+  title="Sunday Drv — Now Spinning"
+  allow="autoplay; encrypted-media; clipboard-write"
+  loading="lazy"
+  style="width:100%; aspect-ratio: 4 / 3.6; border:0; background:transparent;">
+</iframe>
 ```
 
-## Set your playlist
+Keep the `allow="autoplay; encrypted-media"` part. Without it, the browser won't let the turntable start the music.
 
-You can set it in any of three ways. The first one found wins.
+## Change the playlist
 
-1. Add `?playlist=<link | spotify:playlist:… | id>` to the page URL.
-2. Paste a link into the **Playlist link** form. The page remembers it in this browser.
-3. Set `CONFIG.playlist` at the top of `turntable.js`. Use this for the site default.
+Edit `CONFIG.playlist` at the top of `turntable.js`, or add `?playlist=<spotify link>` to the page URL.
 
 ## How it works
 
-- The page uses the official [Spotify iFrame API](https://developer.spotify.com/documentation/embeds/references/iframe-api).
-  It needs no API keys and no app registration.
-- **Start·Stop**, clicking the record, clicking the tonearm, or pressing the space bar calls `togglePlay()` on the embed.
-- The platter speeds up and coasts down like a real one. Speed (33⅓ / 45) and pitch (±8%) only change how fast the drawing spins. They don't change the audio.
-- The tonearm sweeps from the outer groove to the inner groove as the current song plays. The orange arc marks how far it has gone. When paused, the arm lifts in place (larger shadow, cue lever up). When stopped, it goes back to the rest.
-- With no playlist loaded, the deck runs in demo mode with no audio.
+- Pressing START/STOP, clicking the record or the tonearm, or pressing the space bar plays or pauses the playlist through the [Spotify iFrame API](https://developer.spotify.com/documentation/embeds/references/iframe-api). It needs no API keys.
+- Song title and artwork come from Spotify's public oEmbed endpoint.
+  That endpoint doesn't return the artist name. Showing the artist would need a Spotify developer app and a small server.
+- The tonearm follows the song's progress. When paused, it lifts in place. When stopped, it goes back to the rest.
+- The 33/45 buttons and the pitch slider only change how fast the drawing spins.
+- On screens narrower than 640px, the drawing crops to the deck and hides the dimension lines and labels.
 
 ### Spotify limitations
 
-- Listeners who are signed in to Spotify in that browser hear full tracks. Everyone else hears 30-second previews.
-- Some browsers, mainly Safari and iOS, only allow audio after a click inside the Spotify frame. If the first press does nothing, the page shows a hint to press play in the embed once.
-- The embed has no API for skipping tracks, so skip and track info stay in the Spotify player under the drawing.
+- Visitors who are signed in to Spotify in that browser hear full tracks. Everyone else hears 30-second previews.
+- iPhones and Safari sometimes require one tap inside Spotify's own player. If a press of START doesn't start the music, a small Spotify panel slides up. Tap ▶ in it once and the panel goes away.
 
-## Restyling
+## Restyle
 
-All colours and fonts are CSS variables at the top of `turntable.css` (`--paper`, `--ink`, `--accent`, `--mono`, `--sans`, …).
-There is a light and a dark set. Change those values to match sundaydrv.com.
-
-## Drawing geometry
-
-The SVG in `index.html` uses drawing units (≈ 2 units per mm):
-
-| Part | Value |
-| --- | --- |
-| Plinth | 920 × 680, origin (40, 40) |
-| Platter centre | (380, 380), r = 300 |
-| Tonearm pivot | (820, 175), effective length 450 |
-
-If you move the platter or the pivot, update the matching constants at the top of `turntable.js`.
+Colours and fonts are CSS variables at the top of `turntable.css`: `--blue`, `--bg`, `--wide`, `--cond`, `--mono`.

@@ -1,174 +1,89 @@
 /* ==========================================================================
-   Turntable player: technical-drawing style
+   Turntable player, styled to match sundaydrv.com
    --------------------------------------------------------------------------
-   All colour and type decisions live in the tokens below. To match the
-   sundaydrv.com palette, change these values; nothing else needs touching.
+   Colour and type live in the tokens below.
    ========================================================================== */
 
 :root {
-  --paper:       #f3eee3;   /* sheet background            */
-  --paper-2:     #e8e1d2;   /* vinyl / recessed surfaces   */
-  --ink:         #1d1b18;   /* primary linework            */
-  --ink-2:       #5f584d;   /* dimensions, secondary text  */
-  --ink-faint:   rgba(29, 27, 24, .28);
-  --accent:      #d4562a;   /* "signal" colour: label, LED, progress */
-  --accent-ink:  #f3eee3;   /* text on accent              */
-  --shadow:      rgba(29, 27, 24, .22);
+  --bg:        #f3f3f3;              /* site background                   */
+  --blue:      #2434ef;              /* Sunday Drv blue                   */
+  --blue-2:    rgba(36, 52, 239, .72);
+  --blue-3:    rgba(36, 52, 239, .30);
+  --blue-wash: rgba(36, 52, 239, .06);
+  --shadow:    rgba(36, 52, 239, .22);
 
-  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --wide: "Archivo", "Arial Black", system-ui, sans-serif;   /* wide display (font-stretch 125%) */
+  --cond: "Anton", "Impact", "Arial Narrow", sans-serif;     /* condensed labels   */
+  --mono: "Space Mono", ui-monospace, Menlo, monospace;      /* body / annotation  */
 
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper:     #16150f;
-    --paper-2:   #201e17;
-    --ink:       #ece5d6;
-    --ink-2:     #a39b8b;
-    --ink-faint: rgba(236, 229, 214, .26);
-    --accent:    #ea6a3c;
-    --accent-ink:#16150f;
-    --shadow:    rgba(0, 0, 0, .55);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper:     #16150f;
-  --paper-2:   #201e17;
-  --ink:       #ece5d6;
-  --ink-2:     #a39b8b;
-  --ink-faint: rgba(236, 229, 214, .26);
-  --accent:    #ea6a3c;
-  --accent-ink:#16150f;
-  --shadow:    rgba(0, 0, 0, .55);
-  color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
-
 html, body { margin: 0; }
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--sans);
-  -webkit-font-smoothing: antialiased;
-}
+body { background: var(--bg); color: var(--blue); font-family: var(--mono); -webkit-font-smoothing: antialiased; }
 
-.page {
+.deck {
+  position: relative;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 28px 16px 40px;
+  padding: 16px;
 }
 
-/* ---------- masthead ---------- */
-.masthead__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 22px;
-  font: 500 11px/1.4 var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  border-bottom: 1px solid var(--ink);
-  padding-bottom: 8px;
-}
-.masthead__meta span:last-child { margin-left: auto; }
-.masthead h1 {
-  font: 600 clamp(36px, 7vw, 68px)/1 var(--sans);
-  letter-spacing: -.01em;
-  text-transform: uppercase;
-  margin: 18px 0 6px;
-}
-.masthead__sub {
-  font: 400 13px/1.5 var(--mono);
-  color: var(--ink-2);
-  margin: 0 0 22px;
-}
-.masthead__sub em { font-style: normal; color: var(--ink); }
+#tt { display: block; width: 100%; height: auto; }
 
-/* ---------- sheet frame ---------- */
-.sheet {
-  position: relative;
-  border: 1px solid var(--ink);
-  padding: clamp(6px, 2vw, 22px);
-}
-.sheet::before {               /* inner border, like a drawing frame */
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 1px solid var(--ink-faint);
-  pointer-events: none;
-}
-.sheet__reg {
-  position: absolute;
-  width: 14px; height: 14px;
-  border-color: var(--ink);
-  border-style: solid;
-  border-width: 0;
-}
-.sheet__reg--tl { top: -8px;    left: -8px;   border-top-width: 1px;    border-left-width: 1px; }
-.sheet__reg--tr { top: -8px;    right: -8px;  border-top-width: 1px;    border-right-width: 1px; }
-.sheet__reg--bl { bottom: -8px; left: -8px;   border-bottom-width: 1px; border-left-width: 1px; }
-.sheet__reg--br { bottom: -8px; right: -8px;  border-bottom-width: 1px; border-right-width: 1px; }
+/* ---------- line vocabulary ---------- */
+#tt .ln       { fill: none; stroke: var(--blue); stroke-width: 1.7; stroke-linejoin: round; }
+#tt .ln-2     { stroke-width: 1.15; }
+#tt .ln-3     { fill: none; stroke: var(--blue-3); stroke-width: .9; }
+#tt .body     { fill: var(--bg); }
+#tt .cl       { stroke: var(--blue-3); stroke-width: .9; stroke-dasharray: 22 5 3 5; }
+#tt .dim      { fill: none; stroke: var(--blue-2); stroke-width: .9; }
+#tt .dim-mask { fill: var(--bg); }
+#tt .dim-text { font: 400 15px var(--mono); fill: var(--blue-2); }
+#tt .arrowhead{ fill: var(--blue-2); }
+#tt .dot      { fill: var(--blue); }
+#tt .leader   { stroke: var(--blue-2); stroke-width: .9; }
+#tt .callout  { font: 400 18px var(--cond); fill: var(--blue); letter-spacing: .02em; }
+#tt .tiny     { font: 400 11px var(--mono); fill: var(--blue-2); }
+#tt .ticks    { fill: none; stroke: var(--blue-2); stroke-width: 6; }
+#tt .hatch-line { stroke: var(--blue-3); stroke-width: 1.2; }
 
-#tt { display: block; width: 100%; height: auto; overflow: visible; }
+#tt .strobe       { fill: none; stroke: var(--blue); stroke-width: 3.2; }
+#tt .strobe--fine { stroke-width: 2.2; stroke: var(--blue-2); }
 
-/* ---------- SVG line vocabulary ---------- */
-#tt .ln       { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
-#tt .ln-2     { stroke-width: 1.1; }
-#tt .ln-3     { fill: none; stroke: var(--ink-faint); stroke-width: .9; }
-#tt .body     { fill: var(--paper); }
-#tt .cl       { stroke: var(--ink-faint); stroke-width: .9; stroke-dasharray: 22 5 3 5; }
-#tt .dim      { fill: none; stroke: var(--ink-2); stroke-width: .9; }
-#tt .dim-mask { fill: var(--paper); }
-#tt .dim-text { font: 500 15px var(--mono); fill: var(--ink-2); letter-spacing: .06em; }
-#tt .arrowhead{ fill: var(--ink-2); }
-#tt .dot      { fill: var(--ink); }
-#tt .hatch-line { stroke: var(--ink-faint); stroke-width: 1.2; }
-#tt .tiny     { font: 500 11px var(--mono); fill: var(--ink-2); letter-spacing: .08em; }
-#tt .ticks    { fill: none; stroke: var(--ink-2); stroke-width: 6; }
+#tt .vinyl       { fill: var(--blue-wash); }
+#tt .groove      { fill: none; stroke: var(--blue); }
+#tt .label-disc  { fill: var(--blue); }
+#tt .label-ring  { fill: none; stroke: var(--bg); stroke-width: .9; opacity: .55; }
+#tt .label-text  { font: 700 10.5px var(--mono); letter-spacing: .18em; fill: var(--bg); }
+#tt .label-mark  { font: 800 30px var(--wide); font-stretch: 125%; fill: var(--bg); dominant-baseline: middle; }
+#tt .label-art-ring { fill: none; stroke: var(--blue); stroke-width: 2; }
+#tt .spindle-ring { fill: var(--bg); stroke: var(--blue); stroke-width: 1.2; opacity: .9; }
+#tt .spindle     { fill: var(--bg); stroke: var(--blue); stroke-width: 1.6; }
+#tt .sheen path  { fill: #fff; opacity: .2; pointer-events: none; }
 
-#tt .strobe        { fill: none; stroke: var(--ink); stroke-width: 3.2; }
-#tt .strobe--fine  { stroke-width: 2.2; stroke: var(--ink-2); }
+#tt .tube-outer { fill: none; stroke: var(--blue); stroke-width: 13; stroke-linecap: round; }
+#tt .tube-inner { fill: none; stroke: var(--bg);   stroke-width: 9.6; stroke-linecap: round; }
+#tt .stylus     { fill: var(--blue); }
 
-#tt .vinyl    { fill: var(--paper-2); }
-#tt .groove   { fill: none; stroke: var(--ink); }
-#tt .label-disc { fill: var(--accent); }
-#tt .label-ring { fill: none; stroke: var(--accent-ink); stroke-width: .9; opacity: .6; }
-#tt .label-text { font: 600 10.5px var(--mono); letter-spacing: .22em; fill: var(--accent-ink); }
-#tt .label-mark { font: 600 26px var(--sans); fill: var(--accent-ink); letter-spacing: .04em; }
-#tt .label-small{ font: 500 9px var(--mono); fill: var(--accent-ink); letter-spacing: .2em; }
-#tt .spindle  { fill: var(--paper); stroke: var(--ink); stroke-width: 1.4; }
-#tt .sheen path { fill: var(--paper); opacity: .22; pointer-events: none; }
+#tt .sweep          { fill: none; stroke: var(--blue-2); stroke-width: 1; stroke-dasharray: 3 5; pointer-events: none; }
+#tt .sweep-progress { fill: none; stroke: var(--blue); stroke-width: 3.5; stroke-linecap: round; pointer-events: none; }
 
-#tt .tube-outer { fill: none; stroke: var(--ink);   stroke-width: 13; stroke-linecap: round; }
-#tt .tube-inner { fill: none; stroke: var(--paper); stroke-width: 9.6; stroke-linecap: round; }
-#tt .stylus     { fill: var(--ink); }
-
-#tt .sweep          { fill: none; stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 5; pointer-events: none; }
-#tt .sweep-progress { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; pointer-events: none; }
-
-#tt .led { fill: var(--paper-2); stroke: var(--ink); stroke-width: 1; transition: fill .3s; }
-
-#tt .leader { stroke: var(--ink-2); stroke-width: .9; }
-#tt .balloon circle { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
-#tt .balloon text   { font: 600 13px var(--mono); fill: var(--ink); text-anchor: middle; }
+#tt .led { fill: var(--bg); stroke: var(--blue); stroke-width: 1; transition: fill .3s; }
 
 /* ---------- interaction ---------- */
 #tt .hit { fill: transparent; cursor: pointer; }
 #tt .hit:focus { outline: none; }
-#tt .hit:focus-visible { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; }
+#tt .hit:focus-visible { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 6 6; }
 
 #tt .ctl { cursor: pointer; }
 #tt .ctl:focus { outline: none; }
-#tt .ctl__label { font: 600 12px var(--mono); fill: var(--ink); letter-spacing: .08em; pointer-events: none; }
+#tt .ctl__label { font: 400 17px var(--cond); fill: var(--blue); letter-spacing: .04em; pointer-events: none; }
 #tt .ctl:hover .ctl__face,
-#tt .ctl:focus-visible .ctl__face { stroke: var(--accent); }
-#tt .ctl:active .ctl__face { fill: var(--paper-2); }
-#tt .speed.is-active .ctl__face { fill: var(--ink); }
-#tt .speed.is-active .ctl__label { fill: var(--paper); }
+#tt .ctl:focus-visible .ctl__face { fill: var(--blue-wash); }
+#tt .speed.is-active .ctl__face { fill: var(--blue); }
+#tt .speed.is-active .ctl__label { fill: var(--bg); }
 #tt #pitch-knob { cursor: ns-resize; touch-action: none; }
 
 #tt .arm { cursor: pointer; transition: filter .45s ease; filter: drop-shadow(1.5px 2px 0 var(--shadow)); }
@@ -177,153 +92,123 @@ body {
 #tt #cue-handle { transition: transform .35s ease; }
 #tt.is-lifted #cue-handle { transform: translateY(-30px); }
 
-#tt.is-playing .led   { fill: var(--accent); }
-#tt.is-playing #btn-start .ctl__face { fill: var(--ink); }
-#tt.is-playing #btn-start .ctl__label { fill: var(--paper); }
-#tt.is-playing .stylus { fill: var(--accent); }
+#tt.is-playing .led { fill: var(--blue); }
+#tt.is-playing #btn-start .ctl__face { fill: var(--blue); }
+#tt.is-playing #btn-start .ctl__label { fill: var(--bg); }
 
-/* ---------- lower panels ---------- */
-.lower {
+/* small screens: crop to the deck and drop the annotation layer */
+#tt.is-compact .annot { display: none; }
+
+/* ---------- now playing ---------- */
+.now {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: 22px;
-  margin-top: 26px;
-}
-@media (max-width: 760px) { .lower { grid-template-columns: minmax(0, 1fr); } }
-
-.panel {
-  border: 1px solid var(--ink);
-  padding: 16px;
-  min-width: 0;
-}
-.panel h2 {
-  display: flex;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  font: 600 12px/1 var(--mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  margin: 0 0 14px;
-}
-.panel h2.mt { margin-top: 22px; }
-.num {
-  display: inline-grid;
-  place-items: center;
-  width: 22px; height: 22px;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  font-size: 11px;
-  letter-spacing: 0;
-}
-
-.spotify-host {
-  min-height: 152px;
-  border: 1px dashed var(--ink-faint);
-  border-radius: 12px;
+  gap: 14px;
+  margin: 8px auto 0;
+  max-width: 760px;
+  padding: 12px 14px 16px;
+  border: 1.5px solid var(--blue);
+  border-radius: 20px;
   overflow: hidden;
 }
-.spotify-host iframe { display: block; border: 0; border-radius: 12px; }
-.spotify-empty {
-  min-height: 152px;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  text-align: center;
-  font: 400 13px/1.5 var(--mono);
-  color: var(--ink-2);
+.now__cover {
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background: var(--blue);
+  overflow: hidden;
 }
+.now__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
-.playlist-form { margin-top: 14px; }
-.playlist-form label {
-  display: block;
-  font: 500 11px var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin-bottom: 6px;
-}
-.playlist-form__row { display: flex; gap: 8px; }
-.playlist-form input {
-  flex: 1;
-  min-width: 0;
-  font: 400 14px var(--mono);
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  padding: 10px 12px;
-}
-.playlist-form input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-.playlist-form button {
-  font: 600 12px var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--paper);
-  background: var(--ink);
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  padding: 0 18px;
-  cursor: pointer;
-}
-.playlist-form button:hover { background: var(--accent); border-color: var(--accent); }
-.hint { min-height: 1.5em; margin: 8px 0 0; font: 400 12px/1.5 var(--mono); color: var(--accent); }
-
-.tblock { width: 100%; border-collapse: collapse; font: 400 13px var(--mono); }
-.tblock th, .tblock td { border: 1px solid var(--ink); padding: 8px 10px; text-align: left; }
-.tblock th {
-  width: 34%;
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.tblock td { font-variant-numeric: tabular-nums; }
-#status { text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
-#src { overflow-wrap: anywhere; }
-
-.parts {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: part;
-  font: 400 13px/1.45 var(--mono);
-}
-.parts li {
-  counter-increment: part;
-  position: relative;
-  padding: 6px 0 6px 32px;
-  border-bottom: 1px solid var(--ink-faint);
-}
-.parts li::before {
-  content: counter(part);
-  position: absolute;
-  left: 0;
-  top: 6px;
-  display: grid;
-  place-items: center;
-  width: 20px; height: 20px;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 600;
-}
-.parts b { font-weight: 600; }
-
-.foot {
+.now__eyebrow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 22px;
-  margin-top: 26px;
-  padding-top: 8px;
-  border-top: 1px solid var(--ink);
-  font: 500 11px var(--mono);
-  letter-spacing: .14em;
+  align-items: center;
+  gap: 8px;
+  font: 400 15px/1 var(--cond);
   text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: .03em;
 }
-.foot span:last-child { margin-left: auto; }
+.now__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--blue);
+}
+.is-playing .now__dot { background: var(--blue); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+
+.now__title {
+  margin-top: 6px;
+  font: 800 clamp(16px, 2.6vw, 24px)/1.1 var(--wide);
+  font-stretch: 125%;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.now__meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font: 400 12px/1.3 var(--mono);
+  color: var(--blue-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.now__meta #np-sub { overflow: hidden; text-overflow: ellipsis; }
+.now__time { font-variant-numeric: tabular-nums; flex: none; }
+.now__time:empty { display: none; }
+
+.now__link {
+  font: 400 15px var(--cond);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--blue);
+  text-decoration: none;
+  padding: 8px 12px;
+  border: 1.5px solid var(--blue);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.now__link:hover { background: var(--blue); color: var(--bg); }
+
+.now__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--blue-wash); }
+.now__bar span { display: block; height: 100%; width: 0; background: var(--blue); }
+
+@media (max-width: 520px) {
+  .now { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; }
+  .now__cover { width: 52px; height: 52px; border-radius: 10px; }
+  .now__link { display: none; }
+}
+
+/* ---------- Spotify dock ---------- */
+/* The embed must stay in the page to play audio. It is parked out of sight
+   unless the browser needs one tap inside it before it will play. */
+.dock {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 320px;
+}
+.dock.is-open {
+  position: fixed;
+  left: 50%;
+  top: auto;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 32px));
+  padding: 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--blue);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(36, 52, 239, .18);
+  z-index: 10;
+}
+.dock__msg { margin: 0 0 10px; font: 400 12px/1.4 var(--mono); }
+.dock:not(.is-open) .dock__msg { display: none; }
+.dock__player iframe { display: block; border: 0; border-radius: 12px; }
 
 @media (prefers-reduced-motion: reduce) {
   #tt .arm, #tt #cue-handle { transition: none; }
+  .is-playing .now__dot { animation: none; }
 }
