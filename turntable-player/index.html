@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Now Spinning — Sunday Drive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="turntable.css">
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="masthead__meta">
+        <span>Sunday Drive</span>
+        <span>Audio Dept.</span>
+        <span>Dwg. SD-TT-01</span>
+      </div>
+      <h1>Now Spinning</h1>
+      <p class="masthead__sub">Top view, scale 1:2. Press <em>start·stop</em>, click the record, or press the space bar.</p>
+    </header>
+
+    <!-- ================================================================
+         THE DRAWING
+         Coordinates are in "drawing units" (~2.04 units = 1 mm).
+         Platter centre  : (380, 380)   r = 300
+         Tonearm pivot   : (820, 175)   effective length = 450
+         ================================================================ -->
+    <section class="sheet" aria-label="Turntable player">
+      <span class="sheet__reg sheet__reg--tl" aria-hidden="true"></span>
+      <span class="sheet__reg sheet__reg--tr" aria-hidden="true"></span>
+      <span class="sheet__reg sheet__reg--bl" aria-hidden="true"></span>
+      <span class="sheet__reg sheet__reg--br" aria-hidden="true"></span>
+
+      <svg id="tt" viewBox="-90 -60 1170 890" role="img" aria-labelledby="tt-title">
+        <title id="tt-title">Technical top-down drawing of a turntable that plays a Spotify playlist</title>
+        <defs>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" class="hatch-line"/>
+          </pattern>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+            <path d="M0,1.5 L10,5 L0,8.5 Z" class="arrowhead"/>
+          </marker>
+          <path id="label-path" d="M380,380 m-70,0 a70,70 0 1,1 140,0 a70,70 0 1,1 -140,0"/>
+        </defs>
+
+        <!-- ───────────── Dimensions ───────────── -->
+        <g class="dims" aria-hidden="true">
+          <line x1="40" y1="24" x2="40" y2="-14" class="dim"/>
+          <line x1="960" y1="24" x2="960" y2="-14" class="dim"/>
+          <line x1="40" y1="-4" x2="960" y2="-4" class="dim" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+          <rect x="468" y="-18" width="64" height="26" class="dim-mask"/>
+          <text x="500" y="0" class="dim-text" text-anchor="middle">450</text>
+
+          <line x1="30" y1="40" x2="-14" y2="40" class="dim"/>
+          <line x1="30" y1="720" x2="-14" y2="720" class="dim"/>
+          <line x1="-4" y1="40" x2="-4" y2="720" class="dim" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+          <rect x="-17" y="348" width="26" height="64" class="dim-mask"/>
+          <text x="0" y="380" class="dim-text" text-anchor="middle" transform="rotate(-90 -4 380)" dy="5">352</text>
+
+          <!-- platter diameter leader -->
+          <polyline points="168,168 132,124 92,124" class="dim"/>
+          <circle cx="168" cy="168" r="2.5" class="dot"/>
+          <text x="94" y="117" class="dim-text">Ø300</text>
+        </g>
+
+        <!-- ───────────── Plinth ───────────── -->
+        <g class="plinth">
+          <rect x="170" y="27" width="74" height="16" rx="3" class="ln ln-2 body"/>
+          <rect x="680" y="27" width="74" height="16" rx="3" class="ln ln-2 body"/>
+          <rect x="40" y="40" width="920" height="680" rx="18" class="ln body"/>
+          <rect x="52" y="52" width="896" height="656" rx="10" class="ln-3"/>
+        </g>
+
+        <!-- power lamp + 45 adaptor well -->
+        <g aria-hidden="true">
+          <circle cx="80" cy="80" r="13" class="ln ln-2 body"/>
+          <circle id="led" cx="80" cy="80" r="6.5" class="led"/>
+          <text x="100" y="85" class="tiny">PWR</text>
+
+          <circle cx="700" cy="92" r="26" class="ln ln-2 body"/>
+          <circle cx="700" cy="92" r="19" class="ln-3"/>
+          <circle cx="700" cy="92" r="6" class="ln ln-2 body"/>
+          <text x="700" y="136" class="tiny" text-anchor="middle">45 ADPT</text>
+        </g>
+
+        <!-- ───────────── Platter (static rim) ───────────── -->
+        <circle cx="380" cy="380" r="306" class="ln-3"/>
+        <circle cx="380" cy="380" r="300" class="ln body"/>
+
+        <!-- ───────────── Rotating parts ───────────── -->
+        <g id="platter-rot">
+          <!-- strobe dots (pathLength lets dasharray produce an exact dot count) -->
+          <circle cx="380" cy="380" r="295" pathLength="180" class="strobe" stroke-dasharray="0.42 0.58"/>
+          <circle cx="380" cy="380" r="288" pathLength="216" class="strobe" stroke-dasharray="0.42 0.58"/>
+          <circle cx="380" cy="380" r="281" pathLength="240" class="strobe strobe--fine" stroke-dasharray="0.4 0.6"/>
+          <circle cx="380" cy="380" r="276" class="ln ln-2"/>
+
+          <!-- record -->
+          <g id="record">
+            <circle cx="380" cy="380" r="272" class="vinyl"/>
+            <g id="grooves"></g>
+            <circle cx="380" cy="380" r="272" class="ln ln-2"/>
+            <circle cx="380" cy="380" r="96" class="label-disc"/>
+            <circle cx="380" cy="380" r="88" class="label-ring"/>
+            <circle cx="380" cy="380" r="42" class="label-ring"/>
+            <text class="label-text"><textPath href="#label-path" startOffset="0">SUNDAY DRIVE · SIDE A · 33⅓ RPM · STEREO · </textPath></text>
+            <text x="380" y="352" class="label-mark" text-anchor="middle">SD</text>
+            <text x="380" y="420" class="label-small" text-anchor="middle">LP-001</text>
+            <circle cx="380" cy="380" r="7" class="spindle"/>
+          </g>
+        </g>
+
+        <!-- static reflection on the vinyl so the spin reads -->
+        <g class="sheen" aria-hidden="true">
+          <path d="M380,380 L182,193 A272,272 0 0 1 238,148 Z"/>
+          <path d="M380,380 L578,567 A272,272 0 0 1 522,612 Z"/>
+        </g>
+
+        <!-- centrelines -->
+        <g class="cls" aria-hidden="true">
+          <line x1="56" y1="380" x2="704" y2="380" class="cl"/>
+          <line x1="380" y1="56" x2="380" y2="704" class="cl"/>
+          <line x1="752" y1="175" x2="888" y2="175" class="cl"/>
+          <line x1="820" y1="107" x2="820" y2="243" class="cl"/>
+        </g>
+
+        <!-- click target: the record toggles play -->
+        <circle id="platter-hit" cx="380" cy="380" r="300" class="hit" tabindex="0" role="button" aria-label="Play or pause"/>
+
+        <!-- stylus sweep (built in JS) -->
+        <path id="sweep" class="sweep" d=""/>
+        <path id="sweep-progress" class="sweep-progress" d=""/>
+
+        <!-- ───────────── Controls ───────────── -->
+        <!-- start / stop -->
+        <g id="btn-start" class="ctl" tabindex="0" role="button" aria-label="Start or stop">
+          <rect x="62" y="640" width="106" height="60" rx="6" class="ln body ctl__face"/>
+          <rect x="70" y="648" width="90" height="44" rx="3" class="ln-3"/>
+          <text x="115" y="675" class="ctl__label" text-anchor="middle">START·STOP</text>
+        </g>
+        <!-- speed select -->
+        <g id="btn-33" class="ctl speed is-active" tabindex="0" role="button" aria-label="33 and a third RPM" aria-pressed="true">
+          <rect x="184" y="670" width="48" height="30" rx="4" class="ln body ctl__face"/>
+          <text x="208" y="690" class="ctl__label" text-anchor="middle">33</text>
+        </g>
+        <g id="btn-45" class="ctl speed" tabindex="0" role="button" aria-label="45 RPM" aria-pressed="false">
+          <rect x="242" y="670" width="48" height="30" rx="4" class="ln body ctl__face"/>
+          <text x="266" y="690" class="ctl__label" text-anchor="middle">45</text>
+        </g>
+
+        <!-- anti-skate -->
+        <g aria-hidden="true">
+          <circle cx="620" cy="84" r="22" class="ln ln-2 body"/>
+          <circle cx="620" cy="84" r="15" class="ln-3"/>
+          <line x1="620" y1="84" x2="631" y2="73" class="ln ln-2"/>
+          <text x="620" y="126" class="tiny" text-anchor="middle">A-S</text>
+        </g>
+
+        <!-- cue lever -->
+        <g aria-hidden="true">
+          <rect x="890" y="250" width="30" height="78" rx="5" class="ln ln-2 body"/>
+          <line x1="905" y1="262" x2="905" y2="316" class="ln-3"/>
+          <g id="cue-handle">
+            <rect x="884" y="294" width="42" height="14" rx="4" class="ln body"/>
+          </g>
+          <text x="905" y="346" class="tiny" text-anchor="middle">CUE</text>
+        </g>
+
+        <!-- pitch slider -->
+        <g id="pitch">
+          <rect x="893" y="400" width="14" height="240" rx="4" class="ln ln-2 body"/>
+          <line x1="900" y1="408" x2="900" y2="632" class="ln-3"/>
+          <g class="pitch-scale" aria-hidden="true">
+            <line x1="914" y1="410" x2="928" y2="410" class="ln ln-2"/>
+            <line x1="914" y1="465" x2="922" y2="465" class="ln-3"/>
+            <line x1="914" y1="520" x2="932" y2="520" class="ln ln-2"/>
+            <line x1="914" y1="575" x2="922" y2="575" class="ln-3"/>
+            <line x1="914" y1="630" x2="928" y2="630" class="ln ln-2"/>
+            <text x="934" y="414" class="tiny">+8</text>
+            <text x="937" y="524" class="tiny">0</text>
+            <text x="934" y="634" class="tiny">−8</text>
+          </g>
+          <g id="pitch-knob" class="ctl" tabindex="0" role="slider" aria-label="Pitch" aria-valuemin="-8" aria-valuemax="8" aria-valuenow="0">
+            <rect x="876" y="509" width="48" height="22" rx="4" class="ln body ctl__face"/>
+            <line x1="882" y1="520" x2="918" y2="520" class="ln ln-2"/>
+          </g>
+          <text x="900" y="662" class="tiny" text-anchor="middle">PITCH</text>
+        </g>
+
+        <!-- tonearm base (static) -->
+        <g aria-hidden="true">
+          <circle cx="820" cy="175" r="54" class="ln ln-2 body"/>
+          <circle cx="820" cy="175" r="54" pathLength="72" class="ticks" stroke-dasharray="0.08 0.92"/>
+          <circle cx="820" cy="175" r="46" class="ln-3"/>
+        </g>
+
+        <!-- arm rest (sits under the tube at rest angle, 6°) -->
+        <g aria-hidden="true">
+          <rect x="772" y="492" width="28" height="22" rx="4" class="ln ln-2 body" transform="rotate(6 786 503)"/>
+          <path d="M777,497 q9,12 18,0" class="ln ln-2" transform="rotate(6 786 503)"/>
+        </g>
+
+        <!-- ───────────── Tonearm (rotates about the pivot) ───────────── -->
+        <g id="arm" class="arm" tabindex="0" role="button" aria-label="Tonearm: play or pause">
+          <!-- counterweight -->
+          <rect x="814" y="120" width="12" height="40" class="ln ln-2 body"/>
+          <rect x="797" y="66" width="46" height="58" rx="5" class="ln body"/>
+          <rect x="797" y="66" width="46" height="58" rx="5" fill="url(#hatch)"/>
+          <line x1="797" y1="80" x2="843" y2="80" class="ln ln-2"/>
+          <line x1="797" y1="110" x2="843" y2="110" class="ln ln-2"/>
+
+          <!-- tube: drawn twice for a hollow, outlined look -->
+          <path d="M820,200 L820,500 Q820,545 839.5,576.8" class="tube-outer"/>
+          <path d="M820,200 L820,500 Q820,545 839.5,576.8" class="tube-inner"/>
+
+          <!-- bearing housing -->
+          <circle cx="820" cy="175" r="32" class="ln body"/>
+          <circle cx="820" cy="175" r="21" class="ln-3"/>
+          <circle cx="820" cy="175" r="6" class="ln ln-2 body"/>
+
+          <!-- headshell + cartridge; stylus tip sits at (820, 625) -->
+          <g transform="translate(820 625) rotate(22)">
+            <path d="M-15,-58 L15,-58 L18,9 L-18,9 Z" class="ln body"/>
+            <path d="M17,-30 L44,-40 L47,-35" class="ln ln-2"/>
+            <rect x="-11" y="-36" width="22" height="38" rx="2" class="ln ln-2 body"/>
+            <rect x="-11" y="-36" width="22" height="38" rx="2" fill="url(#hatch)"/>
+            <circle cx="-7" cy="-47" r="2.2" class="ln ln-2"/>
+            <circle cx="7" cy="-47" r="2.2" class="ln ln-2"/>
+            <circle cx="0" cy="0" r="3" id="stylus" class="stylus"/>
+          </g>
+        </g>
+
+        <!-- ───────────── Balloons / callouts ───────────── -->
+        <g class="balloons" aria-hidden="true">
+          <!-- bottom row -->
+          <line x1="115" y1="700" x2="115" y2="776" class="leader"/>
+          <g class="balloon"><circle cx="115" cy="790" r="14"/><text x="115" y="795">4</text></g>
+
+          <line x1="237" y1="700" x2="237" y2="776" class="leader"/>
+          <g class="balloon"><circle cx="237" cy="790" r="14"/><text x="237" y="795">5</text></g>
+
+          <line x1="330" y1="600" x2="330" y2="776" class="leader"/><circle cx="330" cy="600" r="2.5" class="dot"/>
+          <g class="balloon"><circle cx="330" cy="790" r="14"/><text x="330" y="795">2</text></g>
+
+          <line x1="470" y1="664" x2="470" y2="776" class="leader"/><circle cx="470" cy="664" r="2.5" class="dot"/>
+          <g class="balloon"><circle cx="470" cy="790" r="14"/><text x="470" y="795">3</text></g>
+
+          <line x1="573" y1="610" x2="600" y2="776" class="leader"/><circle cx="573" cy="610" r="2.5" class="dot"/>
+          <g class="balloon"><circle cx="600" cy="790" r="14"/><text x="600" y="795">1</text></g>
+
+          <!-- right column -->
+          <line x1="620" y1="62" x2="620" y2="-26" class="leader"/>
+          <g class="balloon"><circle cx="620" cy="-40" r="14"/><text x="620" y="-35">7</text></g>
+
+          <line x1="874" y1="200" x2="1021" y2="200" class="leader"/>
+          <g class="balloon"><circle cx="1035" cy="200" r="14"/><text x="1035" y="205">6</text></g>
+
+          <line x1="920" y1="300" x2="1021" y2="300" class="leader"/>
+          <g class="balloon"><circle cx="1035" cy="300" r="14"/><text x="1035" y="305">8</text></g>
+
+          <line x1="907" y1="560" x2="1021" y2="560" class="leader"/>
+          <g class="balloon"><circle cx="1035" cy="560" r="14"/><text x="1035" y="565">9</text></g>
+        </g>
+      </svg>
+    </section>
+
+    <!-- ───────────── Below the drawing ───────────── -->
+    <section class="lower">
+      <div class="panel panel--source">
+        <h2><span class="num">A</span>Signal source</h2>
+        <div id="spotify-host" class="spotify-host">
+          <div id="spotify-empty" class="spotify-empty">
+            No playlist loaded. Paste a Spotify playlist link below. Until then the deck spins in demo mode, with no audio.
+          </div>
+        </div>
+        <form id="playlist-form" class="playlist-form" autocomplete="off">
+          <label for="playlist-input">Playlist link</label>
+          <div class="playlist-form__row">
+            <input id="playlist-input" type="text" inputmode="url" placeholder="https://open.spotify.com/playlist/…">
+            <button type="submit">Load</button>
+          </div>
+          <p id="hint" class="hint" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="panel panel--block">
+        <h2><span class="num">B</span>Title block</h2>
+        <table class="tblock">
+          <tr><th>Status</th><td id="status">Standby</td></tr>
+          <tr><th>Position</th><td><span id="time">00:00</span> / <span id="dur">--:--</span></td></tr>
+          <tr><th>Speed</th><td><span id="rpm">33⅓</span> rpm</td></tr>
+          <tr><th>Pitch</th><td><span id="pitch-val">±0.0</span>%</td></tr>
+          <tr><th>Source</th><td id="src">Demo</td></tr>
+        </table>
+
+        <h2 class="mt"><span class="num">C</span>Parts list</h2>
+        <ol class="parts">
+          <li><b>Platter</b>, Ø300, die-cast, direct drive</li>
+          <li><b>Record</b>, 12″, 180 g. Click it to play or pause.</li>
+          <li><b>Strobe dots</b>, 50/60 Hz, ring of 3</li>
+          <li><b>Start·Stop</b>, toggles playback</li>
+          <li><b>Speed select</b>, 33⅓ / 45 (sets the visual spin speed)</li>
+          <li><b>Tonearm</b>, J-type, tracks the song's progress</li>
+          <li><b>Anti-skate</b> dial</li>
+          <li><b>Cue lever</b> &amp; arm rest. Lifts while paused.</li>
+          <li><b>Pitch</b>, ±8%. Drag it; double-click to reset.</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>Sunday Drive</span><span>Scale 1:2</span><span>Units: mm</span><span>Sheet 1 / 1</span>
+    </footer>
+  </div>
+
+  <script src="turntable.js"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+</body>
+</html>
